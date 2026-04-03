@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Mi Editor</title>
+
+    <link href="../dist/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <div id="root">
+        <div id="app-container" class="flex flex-col h-screen bg-black">
+            <header id="navbar" class="h-12 bg-black flex items-center justify-between px-4">
+
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 hover:bg-gray-900 rounded text-[#07B43C]" id="btnSettings"
+                        onclick="openCloudModal()" title="Cloud Settings"><i data-lucide="settings"
+                            class="size-5"></i></button>
+                    <button class="p-2 hover:bg-gray-900 rounded text-[#07B43C]" id="btnExplore"
+                        onclick="refreshFileList()" title="Refresh Explorer from Cloud"><i data-lucide="cloud-download"
+                            class="size-5"></i></button>
+                    <div id="save-menu-wrapper" class="relative">
+                        <button onclick="toggleSaveMenu(event)" title="Save"
+                            class="p-2 hover:bg-gray-900 rounded text-[#07B43C]" id="menu-button-1" type="button"
+                            aria-haspopup="menu" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" data-lucide="cloud-upload" aria-hidden="true"
+                                class="lucide lucide-cloud-upload size-5">
+                                <path d="M12 13v8l-4-4"></path>
+                                <path d="m12 21 4-4"></path>
+                                <path d="M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284"></path>
+                            </svg>
+                        </button>
+                        <div id="saveDropdown"
+                            class="hidden absolute left-0 z-50 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:divide-white/10 dark:bg-gray-800 transition-all"
+                            role="menu" aria-orientation="vertical" aria-labelledby="menu-button-1" tabindex="-1">
+
+                            <div class="py-1" role="none">
+                                <button id="menu-save-cloud" onclick="handleQuickSave()"
+                                    class="group flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
+                                    role="menuitem">
+                                    <i data-lucide="save"
+                                        class="mr-3 size-5 text-gray-400 group-hover:text-gray-500"></i>
+                                    Save to Cloud
+                                </button>
+                            </div>
+
+                            <div class="py-1" role="none">
+                                <button id="menu-save-as-cloud" onclick="openSaveModal(true)"
+                                    class="group flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
+                                    role="menuitem">
+                                    <i data-lucide="copy-plus"
+                                        class="mr-3 size-5 text-gray-400 group-hover:text-gray-500"></i>
+                                    Save As to Cloud...
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="p-2 hover:bg-gray-900 rounded text-[#07B43C]" id="btnNew" title="Add new file"><i
+                            data-lucide="plus" class="size-5"></i></button>
+                    <button class="p-2 hover:bg-gray-900 rounded text-[#07B43C]" id="btnPaste"
+                        title="New File from Clipboard (Ctrl + V)"><i data-lucide="clipboard-plus"
+                            class="size-5"></i></button>
+                    <button class="p-2 hover:bg-gray-900 rounded text-[#07B43C]" id="btnUpload"
+                        onclick="triggerLocalOpen()" title="Open file (Ctrl+O)"><i data-lucide="upload"
+                            class="size-5"></i></button>
+                    <button class="p-2 hover:bg-gray-900 rounded text-[#07B43C]" id="btnDownload"
+                        onclick="downloadCurrentFile()" title="Download file"><i data-lucide="download"
+                            class="size-5"></i></button>
+                    <button class="p-2 hover:bg-gray-900 rounded text-[#07B43C]" id="btnUpSize" onclick="changeFont(1)"
+                        title="Increase Font Size"><i data-lucide="a-arrow-up" class="size-5"></i></button>
+                    <button class="p-2 hover:bg-gray-900 rounded text-[#07B43C]" id="btnDownSize"
+                        onclick="changeFont(-1)" title="Decrease Font Size"><i data-lucide="a-arrow-down"
+                            class="size-5"></i></button>
+                    <button class="p-2 hover:bg-gray-900 rounded text-[#07B43C]" id="btnFavorites"><i
+                            data-lucide="sparkles" class="size-5"></i></button>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="btnUser"
+                        class="text-[#18C434] text-sm hover:text-[#18C434]/80 px-2 py-1 rounded-md hover:bg-black/10">Admin</button>
+                    <button id="btnLogout" title="Logout" class="p-2 hover:bg-gray-900 rounded text-[#07B43C]">
+                        <i data-lucide="log-out"></i>
+                    </button>
+                </div>
+            </header>
+
+            <main id="workspace" class="flex flex-1 overflow-hidden min-h-0">
+                <aside id="main-explorer"
+                    class="relative flex flex-row h-full bg-white border-r border-gray-200 transition-all duration-300 w-64">
+
+                    <div id="explorer-content" class="flex-1 flex flex-col overflow-hidden transition-all duration-300">
+                        <div class="p-2 border-b border-gray-200 flex items-center justify-between">
+                            <h2 class="text-gray-700 text-sm font-medium tracking-wider">Explorer</h2>
+                            <button id="btnRefresh" class="p-1 hover:bg-gray-100 rounded text-gray-500"
+                                title="Refresh Explorer">
+                                <i data-lucide="rotate-cw" class="size-4"></i>
+                            </button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto" id="explorer-files">
+                        </div>
+                    </div>
+
+                    <div class="w-8 flex flex-col items-center pt-2 bg-gray-50 border-l border-gray-200">
+                        <button id="btnCollapseSidebar" title="Collapse"
+                            class="p-1 hover:bg-gray-200 rounded text-gray-600 transition-colors">
+                            <span id="sidebarIconContainer"
+                                class="flex items-center justify-center transition-transform duration-300 inline-block">
+                                <i data-lucide="chevron-left" class="size-4"></i>
+                            </span>
+                        </button>
+                    </div>
+                </aside>
+
+                <section class="flex-1 min-w-0" id="editor-col">
+                    <div class="flex flex-col h-full min-h-0" id="editor-placeholder">
+                        <div class="flex-shrink-0 bg-white border-b border-gray-200" id="tabs">
+                            <div id="tabs-container" class="flex overflow-x-auto flex-1"></div>
+                        </div>
+
+                        <div class="flex-1 min-h-0" id="editor-container">
+                            <div class="h-full bg-white">
+                                <div id="editor-space"
+                                    class="h-full flex items-center justify-center text-gray-500 bg-white">
+                                    <!-- <i data-lucide="code-2"></i> -->
+                                    <p>Drag and drop files here to start editing.</p>
+                                    <!-- <div class="shortcut-hint">Press Ctrl + V to paste code.</div> -->
+                                </div>
+                                <div id="editor"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="w-64 flex-shrink-0 overflow-hidden bg-white border-l border-gray-200">
+                    <div class="h-full flex flex-col overflow-hidden bg-white">
+                        <div class="p-2 border-b border-gray-200 flex-shrink-0">
+                            <h2 class="text-gray-700 text-sm font-medium">Outline</h2>
+                        </div>
+                        <div class="flex-1 overflow-y-auto overflow-x-hidden" id="outline"></div>
+                    </div>
+                </aside>
+
+            </main>
+        </div>
+    </div>
+
+    <div id="userProfileModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>User Profile</h2>
+                <button class="text-[#01D639] hover:text-[#01D639]/80"><svg xmlns="http://www.w3.org/2000/svg"
+                        width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x ">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
+                    </svg></button>
+                <span class="close-btn" onclick="closeProfileModal()">&times;</span>
+            </div>
+
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="prof-username" value="Admin">
+                </div>
+
+                <div class="row">
+                    <div class="input-group">
+                        <label>First Name</label>
+                        <input type="text" id="prof-firstname">
+                    </div>
+                    <div class="input-group">
+                        <label>Last Name</label>
+                        <input type="text" id="prof-lastname">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="prof-email">
+                </div>
+
+                <div class="input-group">
+                    <div style="display: flex; justify-content: space-between;">
+                        <label>OpenAI API Key</label>
+                        <a href="#" class="get-key-link">Get an API Key</a>
+                    </div>
+                    <textarea id="prof-apikey" rows="3"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeProfileModal()">Cancel</button>
+                <button class="btn-save" onclick="saveProfile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="saveModal" class="hidden inset-0 bg-black/50 items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="flex items-center justify-between p-4 border-b bg-black">
+                <h2 class="text-lg font-semibold text-[#01D639]">Save File</h2>
+                <button onclick="closeSaveModal()" class="text-[#01D639] hover:text-[#01D639]/80"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-x ">
+                        <path d="M18 6 6 18"></path>
+                        <path d="m6 6 12 12"></path>
+                    </svg></button>
+            </div>
+            <form onsubmit="event.preventDefault();" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">File Name</label>
+                    <input type="text" id="newFileName"
+                        class="w-full p-3 border rounded-md focus:ring-2 focus:ring-[#01D639] focus:border-transparent"
+                        placeholder="filename.src">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeSaveModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                    <button onclick="confirmSave()"
+                        class="px-4 py-2 bg-[#01D639] text-black rounded-md hover:bg-[#01D639]/90">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="cloud-config-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="flex items-center justify-between p-4 border-b bg-black">
+                <h2 class="text-lg font-semibold text-[#01D639]">Cloud Configuration</h2>
+                <button onclick="closeCloudModal()" class="text-[#01D639] hover:text-[#01D639]/80">
+                    <i data-lucide="x" class="size-5"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
+                    <div class="relative">
+                        <select id="cloud-provider" class="w-full p-3 bg-white border border-gray-300 rounded-md appearance-none outline-none 
+               transition-all duration-200
+               focus:ring-2 focus:ring-[#01D639] focus:border-transparent
+               text-gray-700 cursor-pointer">
+                            <option value="supabase">Supabase Storage</option>
+                            <option value="firebase" disabled>Firebase (Soon)</option>
+                            <option value="aws" disabled>AWS S3 (Soon)</option>
+                        </select>
+                        <i data-lucide="chevron-down"
+                            class="absolute right-3 top-3 size-4 text-gray-400 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Project
+                        URL</label>
+                    <input id="cloud-url" type="text" placeholder="https://xyz.supabase.co"
+                        class="w-full p-3 border rounded-md focus:ring-1 focus:ring-[#01D639] focus:border-transparent">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">API
+                        Key / Token</label>
+                    <input id="cloud-key" type="password" placeholder="Paste your service-role or anon key"
+                        class="w-full p-3 border rounded-md focus:ring-1 focus:ring-[#01D639] focus:border-transparent">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Storage
+                        Identifier (Bucket)</label>
+                    <div class="flex gap-2">
+                        <input id="cloud-bucket" type="text" placeholder="e.g. scripts"
+                            class="w-full p-3 border rounded-md focus:ring-1 focus:ring-[#01D639] focus:border-transparent">
+
+                        <button onclick="testCloudConnection()" title="Test Connection"
+                            class="flex items-center justify-center bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 px-4 rounded-lg border border-gray-200 dark:border-white/10 transition-all active:scale-95 group">
+                            <i data-lucide="refresh-cw"
+                                class="size-4 text-gray-600 dark:text-gray-300 group-hover:rotate-180 transition-transform duration-500"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button onclick="closeCloudModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button onclick="handleSaveConfig()"
+                        class="px-4 py-2 bg-[#01D639] text-black rounded-md hover:bg-[#01D639]/90">
+                        Save Configuration
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- <div id="cloud-config-modal" class="space-y-4 p-4 text-sm">
+        <div>
+            <label class="block font-semibold text-gray-700 mb-1">Cloud Provider</label>
+            <select id="cloud-provider"
+                class="w-full border rounded px-3 py-2 bg-gray-50 focus:ring-2 focus:ring-green-500">
+                <option value="supabase">Supabase</option>
+                <option value="aws">AWS S3 (Coming Soon)</option>
+                <option value="aws">Firabase (Coming Soon)</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block font-semibold text-gray-700 mb-1">Project URL / Endpoint</label>
+            <input id="cloud-url" type="text" placeholder="https://xyz.supabase.co"
+                class="w-full border rounded px-3 py-2">
+        </div>
+
+        <div>
+            <label class="block font-semibold text-gray-700 mb-1">API Key / Token</label>
+            <input id="cloud-key" type="password" placeholder="Suoer-secret-key"
+                class="w-full border rounded px-3 py-2 font-mono">
+        </div>
+
+        <div>
+            <label class="block font-semibold text-gray-700 mb-1">Storage Identifier (Bucket)</label>
+            <div class="flex gap-2">
+                <input id="cloud-bucket" type="text" placeholder="e.g. scripts" class="w-full border rounded px-3 py-2">
+                <button onclick="testConnection()"
+                    class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                    <i data-lucide="refresh-cw" class="size-4"></i>
+                </button>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-1">The name of the bucket where your files are stored.</p>
+        </div>
+    </div> -->
+
+    <input type="file" id="localFilePicker" accept=".src,.txt,.html,.js" style="display: none;" />
+
+    <div id="toast-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+    <script src="js/cloudConfig.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
