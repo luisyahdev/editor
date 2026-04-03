@@ -27,7 +27,7 @@ const CloudManager = {
             case 'supabase':
                 if (typeof supabase !== 'undefined') {
                     window.cloudClient = supabase.createClient(url, key);
-                    console.log("✅ Cliente Supabase vinculado.");
+                    // console.log("✅ Cliente Supabase vinculado.");
                 }
 
                 break;
@@ -38,7 +38,7 @@ const CloudManager = {
                 break;
 
             default:
-                console.error("Proveedor no soportado:", provider);
+            // console.error("Proveedor no soportado:", provider);
         }
     },
 
@@ -70,7 +70,7 @@ const CloudManager = {
     // Nuevo método para ejecutar lo que quedó pendiente
     resumePendingAction() {
         if (this.pendingAction && typeof this.pendingAction === 'function') {
-            console.log("▶️ Resumiendo acción pendiente...");
+            // console.log("▶️ Resumiendo acción pendiente...");
             this.pendingAction();
             this.pendingAction = null; // Limpiamos para que no se repita
         }

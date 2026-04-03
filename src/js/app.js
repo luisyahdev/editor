@@ -1333,7 +1333,7 @@ async function handleQuickSave() {
     // 2. ESCENARIO A: Es un archivo que no está en la nube
     // (Ya sea porque se llama 'Untitled' o porque tiene el flag isLocal: true)
     if (fileData.isLocal || fileName.startsWith("Untitled")) {
-        console.log("Detectado archivo local/nuevo, abriendo modal de guardado...");
+        // console.log("Detectado archivo local/nuevo, abriendo modal de guardado...");
 
         // Llamamos al modal de "Guardar como" porque necesita nombre/vinculación
         // Le pasamos true para que el confirmSave sepa que es un "Save As" forzado
@@ -1342,7 +1342,7 @@ async function handleQuickSave() {
     }
 
     // 3. ESCENARIO B: Ya existe en la nube (Actualización rápida)
-    console.log('Guardando cambios directamente en la nube para:', fileName);
+    // console.log('Guardando cambios directamente en la nube para:', fileName);
 
     // Aquí usamos la función que ya actualiza la UI (iconos, dirty, etc.)
     // Pero como ya es de la nube y NO es un "Save As", no pedirá confirmación
@@ -1531,7 +1531,7 @@ function getReferences(model, functionName) {
 // }
 
 function createTab(fileName, content, isLocal = false) {
-    console.log({ isLocal });
+    // console.log({ isLocal });
     tabCounter++;
     let name = fileName === ""
         ? "Untitled-" + String(tabCounter).padStart(2, '0') + ".src"
@@ -1759,7 +1759,7 @@ document.getElementById('localFilePicker').addEventListener('change', function (
 // }
 
 function activateTab(name, tab) {
-    console.log('Intentando activar:', name);
+    // console.log('Intentando activar:', name);
 
     // 1. VALIDACIÓN CRÍTICA
     if (!models[name] || !models[name].instance) {
@@ -1773,7 +1773,7 @@ function activateTab(name, tab) {
     // Usamos el 'currentModelName' antiguo antes de actualizarlo
     const previousModel = window.editor.getModel();
     if (previousModel && currentModelName) {
-        console.log(`Guardando estado de vista para: ${currentModelName}`);
+        // console.log(`Guardando estado de vista para: ${currentModelName}`);
         viewStates.set(currentModelName, window.editor.saveViewState());
     }
 
@@ -1786,7 +1786,7 @@ function activateTab(name, tab) {
 
     // 5. RESTAURAR ESTADO DE VISTA (Si existe)
     if (viewStates.has(name)) {
-        console.log(`Restaurando estado de vista para: ${name}`);
+        // console.log(`Restaurando estado de vista para: ${name}`);
         window.editor.restoreViewState(viewStates.get(name));
     }
 
@@ -1818,7 +1818,7 @@ function activateTab(name, tab) {
 }
 
 async function syncExplorer(fileName) {
-    console.log(fileName);
+    // console.log(fileName);
     // 1. Quitamos el sombreado previo de todos los archivos
     document.querySelectorAll('.explorer-item').forEach(item => {
         item.classList.remove('active-explorer'); // Cambia por tu clase de CSS
@@ -1827,7 +1827,7 @@ async function syncExplorer(fileName) {
     // 2. [LÓGICA CRÍTICA]: Si el archivo actual es LOCAL, NO sombreamos nada en el explorer
     // porque ese archivo físicamente no existe en la lista de Supabase aún.
     if (models[fileName] && models[fileName].isLocal) {
-        console.log("Archivo local detectado: omitiendo sombreado en explorer.");
+        // console.log("Archivo local detectado: omitiendo sombreado en explorer.");
         return;
     }
 
@@ -1879,7 +1879,7 @@ function closeTab(name, tabElementContainer) {
 
     // 2. Limpiar Monaco y Memoria
     if (models[name]) {
-        console.log(name);
+        // console.log(name);
         // Importante: dispose libera la memoria del modelo en Monaco
         models[name].instance.dispose();
         delete models[name];
@@ -1887,27 +1887,27 @@ function closeTab(name, tabElementContainer) {
 
     if (viewStates.has(name)) {
         viewStates.delete(name);
-        console.log(`Posición de vista eliminada para: ${name}`);
+        // console.log(`Posición de vista eliminada para: ${name}`);
     }
 
-    console.log(Object.keys(models));
+    // console.log(Object.keys(models));
     // 3. Eliminar del array de seguimiento 'tabs'
-    console.log("tabs antes", tabs)
+    // console.log("tabs antes", tabs)
     tabs = tabs.filter(t => t.name !== name);
-    console.log("tabs despues", tabs)
+    // console.log("tabs despues", tabs)
 
     // 4. Eliminar del DOM
     tabElementContainer.remove();
 
     // 5. Manejo del foco (¿Qué mostrar ahora?)
     if (tabs.length > 0) {
-        console.log('quedan tabs: ', tabs.length);
+        // console.log('quedan tabs: ', tabs.length);
         // Si quedan tabs, activamos el último de la lista
         const lastTab = tabs[tabs.length - 1];
         activateTab(lastTab.name, lastTab.tab);
         //currentModelName = lastTab.name;
     } else {
-        console.log('no quedan tabs');
+        // console.log('no quedan tabs');
         // Si no quedan tabs, limpiamos el editor
         editor.setModel(null);
         currentModelName = null;
@@ -2263,7 +2263,7 @@ async function confirmSave() {
     // Caso B: El nombre es igual pero el archivo es LOCAL (está intentando subir a un sitio ocupado)
     //if (existingFile && (newName !== currentModelName || isLocal)) {
     if (existingFile && (nameChanged || isLocal || isSaveAs)) {
-        console.log('Conflicto de nombre detectado en Supabase');
+        // console.log('Conflicto de nombre detectado en Supabase');
         // const overwrite = confirm(`El archivo "${newName}" ya existe en la nube. ¿Deseas sobrescribirlo?`);
         // if (!overwrite) return;
 
@@ -2536,7 +2536,7 @@ function openCloudModal() {
         lucide.createIcons();
     }
 
-    console.log("☁️ Cloud Config Modal opened and synced with LocalStorage.");
+    // console.log("☁️ Cloud Config Modal opened and synced with LocalStorage.");
 }
 
 // function openCloudModal() {
@@ -2579,7 +2579,7 @@ function closeCloudModal() {
     const overlay = document.getElementById('modal-overlay');
     if (overlay) overlay.classList.add('hidden');
 
-    console.log("☁️ Cloud Config Modal closed.");
+    // console.log("☁️ Cloud Config Modal closed.");
 }
 
 // const SUPABASE_URL = 'https://eoovrkbjpfrlfuyymxjv.supabase.co';
@@ -2658,7 +2658,7 @@ function closeCloudModal() {
 // }
 
 async function saveToSupabase(name, forceSave = false) {
-    console.log(models);
+    // console.log(models);
     const modelData = models[name];
     if (!modelData) return;
 
@@ -2667,7 +2667,7 @@ async function saveToSupabase(name, forceSave = false) {
     // VALIDACIÓN: 
     // Guardamos si: (Está sucio) O (Estamos forzando el guardado por ser nuevo)
     if (!modelData.isDirty && !forceSave) {
-        console.log("Nada que guardar.");
+        // console.log("Nada que guardar.");
         return;
     }
 
@@ -2758,7 +2758,7 @@ async function loadFileListFromSupabase() {
                 if (existingModel) {
                     // CASO CRÍTICO: El archivo abierto es LOCAL y se llama igual al de la NUBE
                     if (existingModel.isLocal) {
-                        console.log('Conflicto detectado: Local vs Cloud');
+                        // console.log('Conflicto detectado: Local vs Cloud');
 
                         // showConfirmationToast({
                         //     title: "File Conflict",
@@ -2831,7 +2831,7 @@ async function loadFileListFromSupabase() {
 }
 
 async function openFileFromExplorer(fileName) {
-    console.log(fileName);
+    // console.log(fileName);
 
     // // 1. ¿Ya tenemos este modelo cargado en el editor?
     // if (models[fileName]) {
@@ -2847,7 +2847,7 @@ async function openFileFromExplorer(fileName) {
 
     // 2. Si no existe, entonces SÍ vamos a Supabase
     try {
-        console.log(`Abriendo: ${fileName}...`);
+        // console.log(`Abriendo: ${fileName}...`);
         const bucket = CloudManager.config.bucket;
         const { data, error } = await window.cloudClient
             .storage
@@ -2945,7 +2945,7 @@ btnCollapse.onclick = function () {
 // --- Lógica de Refresh ---
 
 async function refreshFileList() {
-    console.log('Refreshing...')
+    // console.log('Refreshing...')
     const btn = document.getElementById('btnRefresh');
     if (!btn) return; // Seguridad por si el botón no existe aún
 
@@ -3024,7 +3024,7 @@ async function saveProfile() {
         apiKey: document.getElementById('prof-apikey').value
     };
 
-    console.log("Saving user data:", data);
+    // console.log("Saving user data:", data);
 
     // Aquí podrías guardar en localStorage o en una tabla de Supabase
     showToast("Profile updated successfully");
